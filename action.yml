@@ -1,0 +1,84 @@
+name: "run-lampa"
+description: "A GitHub Action to run Lampa analysis"
+author: "dector"
+
+branding:
+  icon: "activity"
+  color: "yellow"
+
+inputs:
+  version:
+    description: 'The version of Lampa to use (e.g., v0.1.0). "latest" is also supported.'
+    required: true
+    default: "latest"
+  args:
+    description: "Arguments to pass to the lampa command"
+    required: false
+  github-token:
+    description: "GitHub token for authenticated API requests to avoid rate limiting."
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Determine OS and architecture
+      id: get-os-arch
+      shell: bash
+      run: |
+        OS=""
+        ARCH=""
+        EXT=""
+        case "${{ runner.os }}" in
+          Linux) OS="linux" ;;
+          Windows) OS="windows"; EXT=".exe" ;;
+          macOS) OS="darwin" ;;
+        esac
+        case "${{ runner.arch }}" in
+          X64) ARCH="amd64" ;;
+          ARM64) ARCH="arm64" ;;
+        esac
+        echo "executable_name=lampa-${OS}-${ARCH}${EXT}" >> $GITHUB_OUTPUT
+
+    - name: Download Lampa
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        VERSION="${{ inputs.version }}"
+        if [[ "${VERSION}" == "latest" ]]; then
+          API_URL="https://api.github.com/repos/dector/lampa/releases/latest"
+          HEADERS=(-s)
+          if [[ -n "${GITHUB_TOKEN}" ]]; then
+            HEADERS+=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+          fi
+          HEADERS+=(-H "Accept: application/vnd.github.v3+json")
+          VERSION_TAG=$(curl "${HEADERS[@]}" "${API_URL}" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        else
+          VERSION_TAG=$VERSION
+        fi
+
+        if [[ -z "${VERSION_TAG}" ]]; then
+          echo "Could not determine Lampa version."
+          exit 1
+        fi
+
+        EXECUTABLE_NAME="${{ steps.get-os-arch.outputs.executable_name }}"
+        DOWNLOAD_URL="https://github.com/dector/lampa/releases/download/${VERSION_TAG}/${EXECUTABLE_NAME}"
+
+        echo "Downloading Lampa from ${DOWNLOAD_URL}"
+        curl -L -o "${EXECUTABLE_NAME}" "${DOWNLOAD_URL}"
+        if [ $? -ne 0 ]; then
+            echo "Failed to download Lampa."
+            exit 1
+        fi
+
+        if [[ "${{ runner.os }}" != "Windows" ]]; then
+          chmod +x "${EXECUTABLE_NAME}"
+        fi
+
+    - name: Run Lampa
+      shell: bash
+      run: |
+        EXECUTABLE_NAME="${{ steps.get-os-arch.outputs.executable_name }}"
+        ./${EXECUTABLE_NAME} ${{ inputs.args }}
