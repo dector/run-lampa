@@ -61,6 +61,9 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Run Lampa
         uses: dector/run-lampa@v1
         with:
