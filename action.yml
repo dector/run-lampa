@@ -72,7 +72,7 @@ runs:
           ARM64) ARCH="arm64" ;;
         esac
         echo "version_tag=${VERSION_TAG}" >> $GITHUB_OUTPUT
-        echo "executable_name=lampa-${VERSION_TAG}-${OS}-${ARCH}${EXT}" >> $GITHUB_OUTPUT
+        echo "executable_name=lampa-${VERSION_TAG#v}-${OS}-${ARCH}${EXT}" >> $GITHUB_OUTPUT
 
     - name: Download Lampa
       shell: bash
