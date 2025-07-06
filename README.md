@@ -59,14 +59,8 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Download bundletool
-        run: |
-          curl -L -o /tmp/bundletool.jar https://github.com/google/bundletool/releases/download/1.18.1/bundletool-all-1.18.1.jar
-
       - name: Run Lampa
         uses: dector/run-lampa@v1
-        env:
-          BUNDLETOOL_JAR: /tmp/bundletool.jar
         with:
           args: "collect --variant debug --format html,json"
 
