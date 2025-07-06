@@ -22,25 +22,17 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Determine OS and architecture
-      id: get-os-arch
+    - name: Validate version
       shell: bash
       run: |
-        OS=""
-        ARCH=""
-        EXT=""
-        case "${{ runner.os }}" in
-          Linux) OS="linux" ;;
-          Windows) OS="windows"; EXT=".exe" ;;
-          macOS) OS="darwin" ;;
-        esac
-        case "${{ runner.arch }}" in
-          X64) ARCH="amd64" ;;
-          ARM64) ARCH="arm64" ;;
-        esac
-        echo "executable_name=lampa-${OS}-${ARCH}${EXT}" >> $GITHUB_OUTPUT
+        VERSION="${{ inputs.version }}"
+        if [[ "${VERSION}" == "0.1.0"* ]]; then
+          echo "tool version < 0.2.0 can't be used in this GitHub Action"
+          exit 1
+        fi
 
-    - name: Download Lampa
+    - name: Determine version and OS/arch
+      id: get-version-os-arch
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
@@ -63,7 +55,26 @@ runs:
           exit 1
         fi
 
-        EXECUTABLE_NAME="${{ steps.get-os-arch.outputs.executable_name }}"
+        OS=""
+        ARCH=""
+        EXT=""
+        case "${{ runner.os }}" in
+          Linux) OS="linux" ;;
+          Windows) OS="windows"; EXT=".exe" ;;
+          macOS) OS="darwin" ;;
+        esac
+        case "${{ runner.arch }}" in
+          X64) ARCH="amd64" ;;
+          ARM64) ARCH="arm64" ;;
+        esac
+        echo "version_tag=${VERSION_TAG}" >> $GITHUB_OUTPUT
+        echo "executable_name=lampa-${VERSION_TAG}-${OS}-${ARCH}${EXT}" >> $GITHUB_OUTPUT
+
+    - name: Download Lampa
+      shell: bash
+      run: |
+        VERSION_TAG="${{ steps.get-version-os-arch.outputs.version_tag }}"
+        EXECUTABLE_NAME="${{ steps.get-version-os-arch.outputs.executable_name }}"
         DOWNLOAD_URL="https://github.com/dector/lampa/releases/download/${VERSION_TAG}/${EXECUTABLE_NAME}"
 
         echo "Downloading Lampa from ${DOWNLOAD_URL}"
@@ -80,5 +91,5 @@ runs:
     - name: Run Lampa
       shell: bash
       run: |
-        EXECUTABLE_NAME="${{ steps.get-os-arch.outputs.executable_name }}"
+        EXECUTABLE_NAME="${{ steps.get-version-os-arch.outputs.executable_name }}"
         ./${EXECUTABLE_NAME} ${{ inputs.args }}
