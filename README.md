@@ -10,7 +10,7 @@ To use this action in your GitHub Workflows, add the following step to your job:
 - name: Run Lampa
   uses: dector/run-lampa@v1
   with:
-    # The version of Lampa to use (e.g., v0.1.0). "latest" is also supported.
+    # The version of Lampa to use (e.g., v0.2.0). "latest" is also supported.
     # Default is "latest".
     version: "latest"
 
@@ -21,15 +21,20 @@ To use this action in your GitHub Workflows, add the following step to your job:
     # GitHub token for authenticated API requests to avoid rate limiting.
     # Optional, default is ${{ github.token }}.
     github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    # Verbosity level for Lampa output.
+    # Optional, default is "info". Valid values: "normal", "info", "debug", "trace".
+    verbosity: "info"
 ```
 
 ### Inputs
 
 | Name           | Description                                                              | Default            | Required |
 |----------------|--------------------------------------------------------------------------|--------------------|----------|
-| `version`      | The version of Lampa to use (e.g., `v0.1.0`). `latest` is also supported. | `latest`           | **true** |
-| `args`         | Arguments to pass to the `lampa` command.                                | `''`               | **false**|
-| `github-token` | GitHub token for authenticated API requests to avoid rate limiting.      | `${{ github.token }}` | **false**|
+| `version`      | The version of Lampa to use (e.g., `v0.2.0`). `latest` is also supported. | `latest`          | **YES**  |
+| `args`         | Arguments to pass to the `lampa` command.                                | `''`               | **NO**   |
+| `github-token` | GitHub token for authenticated API requests to avoid rate limiting.      | `${{ github.token }}` | **NO** |
+| `verbosity`    | Verbosity level for Lampa output. Valid values: `normal`, `info`, `debug`, `trace`. | `info`  | **NO**   |
 
 ## Example Workflow
 

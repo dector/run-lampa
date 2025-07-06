@@ -18,6 +18,10 @@ inputs:
     description: "GitHub token for authenticated API requests to avoid rate limiting."
     required: false
     default: ${{ github.token }}
+  verbosity:
+    description: "Verbosity level for Lampa output"
+    required: false
+    default: "info"
 
 runs:
   using: "composite"
@@ -92,4 +96,14 @@ runs:
       shell: bash
       run: |
         EXECUTABLE_NAME="${{ steps.get-version-os-arch.outputs.executable_name }}"
-        ./${EXECUTABLE_NAME} ${{ inputs.args }}
+        VERBOSITY="${{ inputs.verbosity }}"
+
+        VERBOSITY_FLAG=""
+        case "${VERBOSITY}" in
+          info) VERBOSITY_FLAG="-v" ;;
+          debug) VERBOSITY_FLAG="-vv" ;;
+          trace) VERBOSITY_FLAG="-vvv" ;;
+          normal) VERBOSITY_FLAG="" ;;
+        esac
+
+        ./${EXECUTABLE_NAME} ${VERBOSITY_FLAG} ${{ inputs.args }}
